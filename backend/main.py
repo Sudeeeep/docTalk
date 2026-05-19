@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from services.chunker import chunk_text
 from services.pdf import extract_text
 
 load_dotenv()
@@ -41,6 +42,6 @@ async def upload_pdf(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, f)
 
     text = extract_text(dest)
-    print(f"[upload] extracted {len(text)} characters — preview: {text[:200]!r}")
+    chunks = chunk_text(text)
 
-    return {"filename": unique_name, "characters": len(text)}
+    return {"filename": unique_name, "characters": len(text), "chunks": len(chunks)}

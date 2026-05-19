@@ -3,6 +3,7 @@ uvicorn[standard]==0.29.0
 python-dotenv==1.0.1
 python-multipart==0.0.9
 PyMuPDF==1.24.3
+langchain-text-splitters==0.2.0
 
 # testing
 pytest==8.2.0
