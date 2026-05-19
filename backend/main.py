@@ -1,6 +1,10 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import os
+import shutil
+import uuid
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -14,7 +18,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+UPLOAD_DIR = "uploads"
+
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.post("/upload")
+async def upload_pdf(file: UploadFile = File(...)):
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
+
+    ext = os.path.splitext(file.filename)[1]
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    dest = os.path.join(UPLOAD_DIR, unique_name)
+
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    return {"filename": unique_name}
