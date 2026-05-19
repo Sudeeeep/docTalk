@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from services.pdf import extract_text
+
 load_dotenv()
 
 app = FastAPI(title="DocTalk API", version="0.1.0")
@@ -38,4 +40,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(dest, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    return {"filename": unique_name}
+    text = extract_text(dest)
+    print(f"[upload] extracted {len(text)} characters — preview: {text[:200]!r}")
+
+    return {"filename": unique_name, "characters": len(text)}
