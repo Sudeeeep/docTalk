@@ -7,6 +7,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from services.chunker import chunk_text
+from services.embedder import embed_and_store
 from services.pdf import extract_text
 
 load_dotenv()
@@ -43,5 +44,6 @@ async def upload_pdf(file: UploadFile = File(...)):
 
     text = extract_text(dest)
     chunks = chunk_text(text)
+    stored = embed_and_store(chunks, unique_name.replace(".pdf", ""))
 
-    return {"filename": unique_name, "characters": len(text), "chunks": len(chunks)}
+    return {"filename": unique_name, "characters": len(text), "chunks": stored}
