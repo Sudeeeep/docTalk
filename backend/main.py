@@ -5,10 +5,13 @@ import uuid
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
+from services.chat import answer_question
 from services.chunker import chunk_text
 from services.embedder import embed_and_store
 from services.pdf import extract_text
+from services.retriever import retrieve
 
 load_dotenv()
 
@@ -23,6 +26,11 @@ app.add_middleware(
 )
 
 UPLOAD_DIR = "uploads"
+
+
+class ChatRequest(BaseModel):
+    doc_id: str
+    question: str
 
 
 @app.get("/health")
@@ -47,3 +55,15 @@ async def upload_pdf(file: UploadFile = File(...)):
     stored = embed_and_store(chunks, unique_name.replace(".pdf", ""))
 
     return {"filename": unique_name, "characters": len(text), "chunks": stored}
+
+
+@app.post("/chat")
+def chat(body: ChatRequest):
+    doc_id = body.doc_id.replace(".pdf", "")
+    try:
+        chunks = retrieve(body.question, doc_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Document not found. Please upload it first.")
+
+    answer = answer_question(body.question, chunks)
+    return {"answer": answer}
