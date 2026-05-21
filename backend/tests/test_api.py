@@ -59,3 +59,33 @@ def test_chat_unknown_doc_returns_404(mock_retrieve):
         json={"doc_id": "doesnotexist", "question": "anything"},
     )
     assert response.status_code == 404
+
+
+@patch("main.answer_question", return_value="Answer A")
+@patch("main.retrieve", return_value=["chunk"])
+def test_history_returns_saved_messages(mock_retrieve, mock_answer):
+    client.post("/chat", json={"doc_id": "histdoc", "question": "Question A"})
+
+    response = client.get("/history/histdoc")
+    assert response.status_code == 200
+    messages = response.json()
+    assert len(messages) == 1
+    assert messages[0]["question"] == "Question A"
+    assert messages[0]["answer"] == "Answer A"
+
+
+def test_history_returns_empty_list_for_unknown_doc():
+    response = client.get("/history/unknowndoc")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@patch("main.answer_question", side_effect=["First answer", "Second answer"])
+@patch("main.retrieve", return_value=["chunk"])
+def test_history_preserves_message_order(mock_retrieve, mock_answer):
+    client.post("/chat", json={"doc_id": "orderdoc", "question": "First question"})
+    client.post("/chat", json={"doc_id": "orderdoc", "question": "Second question"})
+
+    messages = client.get("/history/orderdoc").json()
+    assert messages[0]["question"] == "First question"
+    assert messages[1]["question"] == "Second question"
