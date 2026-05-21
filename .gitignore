@@ -23,6 +23,13 @@ dist/
 # ChromaDB
 chroma_db/
 
+# SQLite database
+*.db
+
+# Uploaded files (keep the uploads/ dir via .gitkeep, not the actual PDFs)
+backend/uploads/*.pdf
+backend/*.pdf
+
 # macOS
 .DS_Store
 
