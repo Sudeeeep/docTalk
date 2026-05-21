@@ -22,8 +22,9 @@ def test_upload_rejects_non_pdf():
     assert "PDF" in response.json()["detail"]
 
 
+@patch("main.summarise", return_value="A test document about greetings.")
 @patch("main.embed_and_store", return_value=3)
-def test_upload_accepts_pdf(mock_embed, single_page_pdf):
+def test_upload_accepts_pdf(mock_embed, mock_summarise, single_page_pdf):
     with open(single_page_pdf, "rb") as f:
         response = client.post(
             "/upload",

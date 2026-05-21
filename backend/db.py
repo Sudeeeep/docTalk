@@ -13,6 +13,16 @@ SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True)
+    doc_id = Column(String, unique=True, nullable=False, index=True)
+    filename = Column(String, nullable=False)
+    summary = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Message(Base):
     __tablename__ = "messages"
 
