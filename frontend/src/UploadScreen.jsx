@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
-
-const API = 'http://localhost:8000'
+import API from './api'
 
 export default function UploadScreen({ onUpload }) {
   const [file, setFile] = useState(null)

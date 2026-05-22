@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import MessageList from './MessageList'
 import QuestionInput from './QuestionInput'
-
-const API = 'http://localhost:8000'
+import API from './api'
 
 export default function ChatScreen({ docId, onReset }) {
   const [messages, setMessages] = useState([])
