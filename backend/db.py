@@ -19,6 +19,7 @@ class Document(Base):
     id = Column(Integer, primary_key=True)
     doc_id = Column(String, unique=True, nullable=False, index=True)
     filename = Column(String, nullable=False)
+    original_filename = Column(String, nullable=False, default="document.pdf")
     summary = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

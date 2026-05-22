@@ -8,8 +8,8 @@ def test_short_text_is_single_chunk():
 
 
 def test_long_text_produces_multiple_chunks():
-    # ~600 chars — just over one chunk_size of 500
-    text = ("word " * 120).strip()
+    # ~1200 chars — just over one chunk_size of 1000
+    text = ("word " * 240).strip()
     result = chunk_text(text)
     assert len(result) > 1
 

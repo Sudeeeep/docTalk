@@ -68,7 +68,12 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
     stored = embed_and_store(chunks, doc_id)
     summary = summarise(text)
 
-    db.add(Document(doc_id=doc_id, filename=unique_name, summary=summary))
+    db.add(Document(
+        doc_id=doc_id,
+        filename=unique_name,
+        original_filename=file.filename,
+        summary=summary,
+    ))
     db.commit()
 
     return {"filename": unique_name, "characters": len(text), "chunks": stored}
@@ -91,6 +96,24 @@ def chat(body: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
 
     return {"answer": answer}
+
+
+@app.get("/documents")
+def get_documents(db: Session = Depends(get_db)):
+    docs = (
+        db.query(Document)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
+    return [
+        {
+            "doc_id": d.doc_id,
+            "original_filename": d.original_filename,
+            "summary": d.summary,
+            "created_at": d.created_at,
+        }
+        for d in docs
+    ]
 
 
 @app.get("/history/{doc_id}")

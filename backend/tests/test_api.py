@@ -81,6 +81,31 @@ def test_history_returns_empty_list_for_unknown_doc():
     assert response.json() == []
 
 
+def test_documents_returns_empty_list_initially():
+    response = client.get("/documents")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@patch("main.summarise", return_value="A summary.")
+@patch("main.embed_and_store", return_value=2)
+def test_documents_returns_uploaded_docs(mock_embed, mock_summarise, single_page_pdf):
+    with open(single_page_pdf, "rb") as f:
+        client.post(
+            "/upload",
+            files={"file": ("my_report.pdf", f, "application/pdf")},
+        )
+
+    response = client.get("/documents")
+    assert response.status_code == 200
+    docs = response.json()
+    assert len(docs) == 1
+    assert docs[0]["original_filename"] == "my_report.pdf"
+    assert "doc_id" in docs[0]
+    assert "summary" in docs[0]
+    assert "created_at" in docs[0]
+
+
 @patch("main.answer_question", side_effect=["First answer", "Second answer"])
 @patch("main.retrieve", return_value=["chunk"])
 def test_history_preserves_message_order(mock_retrieve, mock_answer):
