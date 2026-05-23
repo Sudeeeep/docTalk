@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import API from './api'
+import { getSessionId } from './session'
 
 export default function UploadScreen({ onUpload }) {
   const [file, setFile] = useState(null)
@@ -15,6 +16,7 @@ export default function UploadScreen({ onUpload }) {
     try {
       const formData = new FormData()
       formData.append('file', file)
+      formData.append('session_id', getSessionId())
 
       const res = await fetch(`${API}/upload`, { method: 'POST', body: formData })
       const data = await res.json()

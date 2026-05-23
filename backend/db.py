@@ -20,6 +20,7 @@ class Document(Base):
     doc_id = Column(String, unique=True, nullable=False, index=True)
     filename = Column(String, nullable=False)
     original_filename = Column(String, nullable=False, default="document.pdf")
+    session_id = Column(String, nullable=True, index=True)
     summary = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

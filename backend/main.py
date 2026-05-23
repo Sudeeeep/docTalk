@@ -5,7 +5,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -51,7 +51,7 @@ def health():
 
 
 @app.post("/upload")
-async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_pdf(file: UploadFile = File(...), session_id: str = Form(None), db: Session = Depends(get_db)):
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
 
@@ -72,6 +72,7 @@ async def upload_pdf(file: UploadFile = File(...), db: Session = Depends(get_db)
         doc_id=doc_id,
         filename=unique_name,
         original_filename=file.filename,
+        session_id=session_id,
         summary=summary,
     ))
     db.commit()
@@ -99,9 +100,12 @@ def chat(body: ChatRequest, db: Session = Depends(get_db)):
 
 
 @app.get("/documents")
-def get_documents(db: Session = Depends(get_db)):
+def get_documents(session_id: str = None, db: Session = Depends(get_db)):
+    if not session_id:
+        return []
     docs = (
         db.query(Document)
+        .filter(Document.session_id == session_id)
         .order_by(Document.created_at.desc())
         .all()
     )

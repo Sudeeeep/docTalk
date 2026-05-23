@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import API from './api'
+import { getSessionId } from './session'
 
 export default function Sidebar({ activeDocId, onSelect, onUploadNew }) {
   const [docs, setDocs] = useState([])
 
   useEffect(() => {
     async function loadDocs() {
-      const res = await fetch(`${API}/documents`)
+      const res = await fetch(`${API}/documents?session_id=${getSessionId()}`)
       const data = await res.json()
       setDocs(data)
     }
