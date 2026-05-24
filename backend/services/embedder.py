@@ -35,3 +35,12 @@ def embed_and_store(
     )
 
     return len(chunks)
+
+
+def delete_store(doc_id: str, *, chroma_client=None) -> None:
+    if chroma_client is None:
+        chroma_client = chromadb.PersistentClient(path=CHROMA_PATH)
+    try:
+        chroma_client.delete_collection(doc_id)
+    except Exception:
+        pass

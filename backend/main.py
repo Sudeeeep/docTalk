@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from db import Document, Message, get_db, init_db
 from services.chat import answer_question
 from services.chunker import chunk_text
-from services.embedder import embed_and_store
+from services.embedder import delete_store, embed_and_store
 from services.pdf import extract_text
 from services.retriever import retrieve
 from services.summariser import summarise
@@ -43,6 +43,10 @@ UPLOAD_DIR = "uploads"
 class ChatRequest(BaseModel):
     doc_id: str
     question: str
+
+
+class RenameRequest(BaseModel):
+    original_filename: str
 
 
 @app.get("/health")
@@ -118,6 +122,35 @@ def get_documents(session_id: str = None, db: Session = Depends(get_db)):
         }
         for d in docs
     ]
+
+
+@app.patch("/documents/{doc_id}")
+def rename_document(doc_id: str, body: RenameRequest, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.doc_id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    doc.original_filename = body.original_filename
+    db.commit()
+    return {"ok": True}
+
+
+@app.delete("/documents/{doc_id}")
+def delete_document(doc_id: str, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.doc_id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found.")
+
+    db.query(Message).filter(Message.doc_id == doc_id).delete()
+    db.delete(doc)
+    db.commit()
+
+    delete_store(doc_id)
+
+    file_path = os.path.join(UPLOAD_DIR, doc.filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    return {"ok": True}
 
 
 @app.get("/history/{doc_id}")

@@ -6,31 +6,32 @@ import API from './api'
 import { getSessionId } from './session'
 
 export default function App() {
+  const [docs, setDocs] = useState([])
   const [docId, setDocId] = useState(null)
   const [docName, setDocName] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [validated, setValidated] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  async function loadDocs() {
+    const res = await fetch(`${API}/documents?session_id=${getSessionId()}`)
+    const data = await res.json()
+    setDocs(data)
+    return data
+  }
+
   useEffect(() => {
     async function validateStoredDoc() {
       const stored = localStorage.getItem('docId')
-      if (!stored) {
-        setValidated(true)
-        return
-      }
-      try {
-        const res = await fetch(`${API}/documents?session_id=${getSessionId()}`)
-        const docs = await res.json()
-        const match = docs.find(d => d.doc_id === stored)
+      const fetched = await loadDocs()
+      if (stored) {
+        const match = fetched.find(d => d.doc_id === stored)
         if (match) {
           setDocId(stored)
           setDocName(match.original_filename)
         } else {
           localStorage.removeItem('docId')
         }
-      } catch {
-        localStorage.removeItem('docId')
       }
       setValidated(true)
     }
@@ -42,6 +43,7 @@ export default function App() {
     setDocId(id)
     setDocName(name)
     setShowUpload(false)
+    loadDocs()
   }
 
   function handleSelect(id, name) {
@@ -50,6 +52,20 @@ export default function App() {
     setDocName(name)
     setShowUpload(false)
     setSidebarOpen(false)
+  }
+
+  function handleRename(id, name) {
+    setDocs(prev => prev.map(d => d.doc_id === id ? { ...d, original_filename: name } : d))
+    if (id === docId) setDocName(name)
+  }
+
+  function handleDelete(id) {
+    setDocs(prev => prev.filter(d => d.doc_id !== id))
+    if (id === docId) {
+      localStorage.removeItem('docId')
+      setDocId(null)
+      setDocName('')
+    }
   }
 
   function handleUploadNew() {
@@ -77,9 +93,12 @@ export default function App() {
       )}
 
       <Sidebar
+        docs={docs}
         activeDocId={docId}
         onSelect={handleSelect}
         onUploadNew={handleUploadNew}
+        onRename={handleRename}
+        onDelete={handleDelete}
         isOpen={sidebarOpen}
       />
 
@@ -88,6 +107,7 @@ export default function App() {
           docId={docId}
           docName={docName}
           onToggleSidebar={() => setSidebarOpen(o => !o)}
+          onRename={(name) => handleRename(docId, name)}
         />
       </main>
     </div>
