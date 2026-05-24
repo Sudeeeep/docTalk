@@ -23,7 +23,7 @@ export default function UploadScreen({ onUpload }) {
 
       if (!res.ok) throw new Error(data.detail || 'Upload failed')
 
-      onUpload(data.filename.replace('.pdf', ''))
+      onUpload(data.filename.replace('.pdf', ''), file.name)
     } catch (err) {
       setError(err.message)
     } finally {

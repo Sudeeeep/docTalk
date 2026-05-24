@@ -12,7 +12,7 @@ export default function QuestionInput({ onSubmit, disabled }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white px-4 py-3 flex gap-2">
+    <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white px-6 py-4 flex gap-3">
       <input
         type="text"
         value={question}

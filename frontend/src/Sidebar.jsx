@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import API from './api'
 import { getSessionId } from './session'
 
-export default function Sidebar({ activeDocId, onSelect, onUploadNew }) {
+export default function Sidebar({ activeDocId, onSelect, onUploadNew, isOpen }) {
   const [docs, setDocs] = useState([])
 
   useEffect(() => {
@@ -15,7 +15,13 @@ export default function Sidebar({ activeDocId, onSelect, onUploadNew }) {
   }, [activeDocId])
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen shrink-0">
+    <aside className={`
+      fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200
+      flex flex-col h-screen shrink-0
+      transition-transform duration-300 ease-in-out
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      lg:relative lg:translate-x-0 lg:z-auto
+    `}>
       <div className="px-4 py-4 border-b border-gray-200">
         <h1 className="text-lg font-bold text-gray-900">DocTalk</h1>
       </div>
@@ -36,7 +42,7 @@ export default function Sidebar({ activeDocId, onSelect, onUploadNew }) {
         {docs.map(doc => (
           <button
             key={doc.doc_id}
-            onClick={() => onSelect(doc.doc_id)}
+            onClick={() => onSelect(doc.doc_id, doc.original_filename)}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors truncate ${
               doc.doc_id === activeDocId
                 ? 'bg-blue-50 text-blue-700 font-medium'
