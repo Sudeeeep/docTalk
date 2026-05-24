@@ -104,6 +104,7 @@ export default function App() {
 
       <main className="flex-1 min-w-0">
         <ChatScreen
+          key={docId}
           docId={docId}
           docName={docName}
           onToggleSidebar={() => setSidebarOpen(o => !o)}

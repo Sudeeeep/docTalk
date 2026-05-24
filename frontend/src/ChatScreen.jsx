@@ -11,12 +11,18 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
   const nameInputRef = useRef(null)
 
   useEffect(() => {
+    const controller = new AbortController()
     async function loadHistory() {
-      const res = await fetch(`${API}/history/${docId}`)
-      const data = await res.json()
-      setMessages(data)
+      try {
+        const res = await fetch(`${API}/history/${docId}`, { signal: controller.signal })
+        const data = await res.json()
+        setMessages(data)
+      } catch (e) {
+        if (e.name !== 'AbortError') console.error(e)
+      }
     }
     loadHistory()
+    return () => controller.abort()
   }, [docId])
 
   function startEditName() {
