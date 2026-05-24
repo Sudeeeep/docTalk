@@ -24,11 +24,13 @@ export default function MessageList({ messages, loading }) {
               {msg.question}
             </p>
           </div>
-          <div className="flex justify-start">
-            <p className="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-tl-sm max-w-[75%] text-sm shadow-sm">
-              {msg.answer}
-            </p>
-          </div>
+          {msg.answer != null && (
+            <div className="flex justify-start">
+              <p className="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-tl-sm max-w-[75%] text-sm shadow-sm">
+                {msg.answer}
+              </p>
+            </div>
+          )}
         </div>
       ))}
 

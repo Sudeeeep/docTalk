@@ -38,6 +38,7 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
   }
 
   async function handleQuestion(question) {
+    setMessages(prev => [...prev, { question, answer: null }])
     setLoading(true)
     try {
       const res = await fetch(`${API}/chat`, {
@@ -46,7 +47,11 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
         body: JSON.stringify({ doc_id: docId, question }),
       })
       const data = await res.json()
-      setMessages(prev => [...prev, { question, answer: data.answer }])
+      setMessages(prev => {
+        const updated = [...prev]
+        updated[updated.length - 1] = { question, answer: data.answer }
+        return updated
+      })
     } finally {
       setLoading(false)
     }
