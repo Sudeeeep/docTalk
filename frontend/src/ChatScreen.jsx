@@ -44,7 +44,7 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
   }
 
   async function handleQuestion(question) {
-    setMessages(prev => [...prev, { question, answer: null }])
+    setMessages(prev => [...prev, { question, answer: null, found_in_doc: null }])
     setLoading(true)
     try {
       const res = await fetch(`${API}/chat`, {
@@ -55,12 +55,23 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
       const data = await res.json()
       setMessages(prev => {
         const updated = [...prev]
-        updated[updated.length - 1] = { question, answer: data.answer }
+        updated[updated.length - 1] = { question, answer: data.answer, found_in_doc: data.found_in_doc }
         return updated
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleGeneralKnowledge(question, index) {
+    setMessages(prev => prev.map((m, i) => i === index ? { ...m, answer: null, found_in_doc: null } : m))
+    const res = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ doc_id: docId, question, mode: 'general' }),
+    })
+    const data = await res.json()
+    setMessages(prev => prev.map((m, i) => i === index ? { ...m, answer: data.answer, found_in_doc: true } : m))
   }
 
   return (
@@ -111,7 +122,7 @@ export default function ChatScreen({ docId, docName, onToggleSidebar, onRename }
         </div>
       </header>
 
-      <MessageList messages={messages} loading={loading} />
+      <MessageList messages={messages} onGeneralKnowledge={handleGeneralKnowledge} />
       <QuestionInput onSubmit={handleQuestion} disabled={loading} />
     </div>
   )

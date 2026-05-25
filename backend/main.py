@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from db import Document, Message, get_db, init_db
-from services.chat import answer_question
+from services.chat import answer_from_general, answer_question
 from services.chunker import chunk_text
 from services.embedder import delete_store, embed_and_store
 from services.pdf import extract_text
@@ -43,6 +43,7 @@ UPLOAD_DIR = "uploads"
 class ChatRequest(BaseModel):
     doc_id: str
     question: str
+    mode: str = "document"
 
 
 class RenameRequest(BaseModel):
@@ -87,20 +88,23 @@ async def upload_pdf(file: UploadFile = File(...), session_id: str = Form(None),
 @app.post("/chat")
 def chat(body: ChatRequest, db: Session = Depends(get_db)):
     doc_id = body.doc_id.replace(".pdf", "")
-    try:
-        chunks = retrieve(body.question, doc_id)
-    except Exception:
-        raise HTTPException(status_code=404, detail="Document not found. Please upload it first.")
 
-    doc = db.query(Document).filter(Document.doc_id == doc_id).first()
-    context = ([doc.summary] + chunks) if doc else chunks
+    if body.mode == "general":
+        result = answer_from_general(body.question)
+    else:
+        try:
+            chunks = retrieve(body.question, doc_id)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Document not found. Please upload it first.")
 
-    answer = answer_question(body.question, context)
+        doc = db.query(Document).filter(Document.doc_id == doc_id).first()
+        context = ([doc.summary] + chunks) if doc else chunks
+        result = answer_question(body.question, context)
 
-    db.add(Message(doc_id=doc_id, question=body.question, answer=answer))
+    db.add(Message(doc_id=doc_id, question=body.question, answer=result["answer"]))
     db.commit()
 
-    return {"answer": answer}
+    return {"answer": result["answer"], "found_in_doc": result["found_in_doc"]}
 
 
 @app.get("/documents")

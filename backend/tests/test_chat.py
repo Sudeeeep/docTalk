@@ -6,12 +6,26 @@ from services.chat import answer_question
 @patch("services.chat.OpenAI")
 def test_returns_model_answer(mock_openai):
     mock_openai.return_value.chat.completions.create.return_value = MagicMock(
-        choices=[MagicMock(message=MagicMock(content="Paris"))]
+        choices=[MagicMock(message=MagicMock(content='{"answer": "Paris", "found_in_doc": true}'))]
     )
 
     result = answer_question("What is the capital of France?", ["France's capital is Paris."])
 
-    assert result == "Paris"
+    assert result["answer"] == "Paris"
+    assert result["found_in_doc"] is True
+
+
+@patch("services.chat.OpenAI")
+def test_returns_not_found_when_context_missing(mock_openai):
+    mock_openai.return_value.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(
+            content='{"answer": "I couldn\'t find information about this in the document.", "found_in_doc": false}'
+        ))]
+    )
+
+    result = answer_question("What is the weather like?", ["Unrelated context."])
+
+    assert result["found_in_doc"] is False
 
 
 @patch("services.chat.OpenAI")
@@ -20,7 +34,7 @@ def test_context_chunks_appear_in_prompt(mock_openai):
 
     def capture_call(**kwargs):
         captured["messages"] = kwargs["messages"]
-        return MagicMock(choices=[MagicMock(message=MagicMock(content="ok"))])
+        return MagicMock(choices=[MagicMock(message=MagicMock(content='{"answer": "blue", "found_in_doc": true}'))])
 
     mock_openai.return_value.chat.completions.create.side_effect = capture_call
 

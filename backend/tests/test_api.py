@@ -37,7 +37,7 @@ def test_upload_accepts_pdf(mock_embed, mock_summarise, single_page_pdf):
     assert "chunks" in data
 
 
-@patch("main.answer_question", return_value="The document is about testing.")
+@patch("main.answer_question", return_value={"answer": "The document is about testing.", "found_in_doc": True})
 @patch("main.retrieve", return_value=["relevant chunk one", "relevant chunk two"])
 def test_chat_returns_answer(mock_retrieve, mock_answer):
     response = client.post(
@@ -45,7 +45,9 @@ def test_chat_returns_answer(mock_retrieve, mock_answer):
         json={"doc_id": "abc123", "question": "What is this about?"},
     )
     assert response.status_code == 200
-    assert response.json()["answer"] == "The document is about testing."
+    data = response.json()
+    assert data["answer"] == "The document is about testing."
+    assert "found_in_doc" in data
 
 
 def test_chat_missing_field_returns_422():
@@ -62,7 +64,7 @@ def test_chat_unknown_doc_returns_404(mock_retrieve):
     assert response.status_code == 404
 
 
-@patch("main.answer_question", return_value="Answer A")
+@patch("main.answer_question", return_value={"answer": "Answer A", "found_in_doc": True})
 @patch("main.retrieve", return_value=["chunk"])
 def test_history_returns_saved_messages(mock_retrieve, mock_answer):
     client.post("/chat", json={"doc_id": "histdoc", "question": "Question A"})
@@ -122,7 +124,7 @@ def test_documents_isolated_by_session(mock_embed, mock_summarise, single_page_p
     assert response.json() == []
 
 
-@patch("main.answer_question", side_effect=["First answer", "Second answer"])
+@patch("main.answer_question", side_effect=[{"answer": "First answer", "found_in_doc": True}, {"answer": "Second answer", "found_in_doc": True}])
 @patch("main.retrieve", return_value=["chunk"])
 def test_history_preserves_message_order(mock_retrieve, mock_answer):
     client.post("/chat", json={"doc_id": "orderdoc", "question": "First question"})
