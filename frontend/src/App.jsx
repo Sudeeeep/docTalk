@@ -60,11 +60,16 @@ export default function App() {
   }
 
   function handleDelete(id) {
-    setDocs(prev => prev.filter(d => d.doc_id !== id))
+    const remaining = docs.filter(d => d.doc_id !== id)
+    setDocs(remaining)
     if (id === docId) {
-      localStorage.removeItem('docId')
-      setDocId(null)
-      setDocName('')
+      if (remaining.length > 0) {
+        handleSelect(remaining[0].doc_id, remaining[0].original_filename)
+      } else {
+        localStorage.removeItem('docId')
+        setDocId(null)
+        setDocName('')
+      }
     }
   }
 
